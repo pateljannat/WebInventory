@@ -1,0 +1,47 @@
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+<div class="m-3">
+	<h3 class="d-inline-block">Product Movements</h3>
+	<a href="/product-movement/add" class="btn btn-success float-right d-inline-block">Move Products</a>
+</div>
+<table class="table mt-4">
+	<thead class="thead-dark">
+		<tr>
+			<th scope="col">Movement #</th>
+			<th scope="col">Time</th>
+			<th scope="col">From</th>
+			<th scope="col">To</th>
+			<th scope="col">Product</th>
+			<th scope="col">Quantity</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for movement in movements %}
+		<tr>
+			<td scope="row">
+				{{movement.movement_id}}
+			</td>
+			<td scope="row">
+				{{movement.timestamp.day}}/{{movement.timestamp.month}}/{{movement.timestamp.year}} {{movement.timestamp.strftime("%X")}}
+			</td>
+			<td scope="row">
+				{{movement.from_location}}
+			</td>
+			<td scope="row">
+				{{movement.to_location}}
+			</td>
+			<td scope="row">
+				{{movement.product_id}}
+			</td>
+			<td scope="row">
+				{{movement.qty}}
+				<div class="float-right">
+					<a href="/product-movement/edit/{{movement.movement_id}}" class="btn btn-primary m-2">Edit</a>
+					<a href="/product-movement/delete/{{movement.movement_id}}" class="btn btn-danger m-2">Delete</a>
+				</div>
+			</td>
+		</tr>
+		{% endfor%}
+	</tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+<h3 class="m-3 text-center">Inventory Report</h3>
+<table class="table mt-4">
+	<thead class="thead-dark">
+		<tr>
+			<th scope="col">Warehouse</th>
+			<th scope="col">Product</th>
+			<th scope="col">Quantity</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for items in report %} {% for location in items %} {% for product in items[location] %}
+		<tr scope="row">
+			<td>
+				{{location}}
+			</td>
+			<td>
+				{{product}}
+			</td>
+			<td>
+				{{items[location][product]}}
+			</td>
+		</tr>
+		{% endfor %} {% endfor %} {% endfor%}
+	</tbody>
+</table>
+
+{% endblock %}

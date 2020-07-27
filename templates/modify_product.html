@@ -1,0 +1,30 @@
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+<div class="shadow p-5 m-3 bg-white rounded w-50">
+	<h4>{% if product %} Edit Product {% else %} Add Product {% endif %}</h4>
+	<hr>
+	<form {% if product %} action="/product/edit/{{product.product_id}}" {% else %} action="/product/add" {% endif %} method="POST">
+		<div class="form-group">
+			<label for="title">Product Name:</label>
+			<input
+				class="form-control"
+				type="text"
+				name="product_name"
+				id="product_name"
+				placeholder="Enter Product Name"
+				aria-label="Enter Product Name"
+				{%
+				if
+				product
+				%}
+				value="{{product.product_name}}"
+				{%
+				endif
+				%}
+			/>
+		</div>
+
+		<input class="btn btn-primary" type="submit" value="Submit" />
+	</form>
+</div>
+
+{% endblock %}

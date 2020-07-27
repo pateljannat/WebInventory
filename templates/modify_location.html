@@ -1,0 +1,30 @@
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+<div class="shadow p-5 m-3 bg-white rounded w-50">
+	<h4>{% if location %} Edit Location {% else %} Add Location {% endif %}</h4>
+	<hr>
+	<form {% if location %} action="/location/edit/{{location.location_id}}" {% else %} action="/location/add" {% endif %} method="POST">
+		<div class="form-group">
+			<label for="title">Location Name:</label>
+			<input
+				class="form-control"
+				type="text"
+				name="location_name"
+				id="location_name"
+				placeholder="Enter Location Name"
+				aria-label="Enter Location Name"
+				{%
+				if
+				location
+				%}
+				value="{{location.location_name}}"
+				{%
+				endif
+				%}
+			/>
+		</div>
+
+		<input class="btn btn-primary" type="submit" value="Submit" />
+	</form>
+</div>
+
+{% endblock %}
