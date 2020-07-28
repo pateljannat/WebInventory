@@ -13,7 +13,7 @@ class Product(db.Model):
     product_name = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
-        return "Product" + str(self.product_id)
+        return "Product " + str(self.product_id)
 
 # Location Model
 class Location(db.Model):
@@ -22,20 +22,24 @@ class Location(db.Model):
     location_name = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
-        return "Location" + str(self.location_id)
+        return "Location " + str(self.location_id)
 
 # Product Movement Model
 class ProductMovement(db.Model):
     __tablename__ = "ProdutMovement"
     movement_id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, nullable=False, default =datetime.utcnow )
-    from_location = db.Column(db.Integer,db.ForeignKey('Location.location_id'))
+    from_location = db.Column(db.Integer, db.ForeignKey('Location.location_id'))
     to_location = db.Column(db.Integer,db.ForeignKey('Location.location_id'))
     product_id = db.Column(db.Integer,db.ForeignKey('Product.product_id'))
+
+    from_location_ref = db.relationship("Location",foreign_keys=[from_location])
+    to_location_ref = db.relationship("Location",foreign_keys=[to_location])
+    product_ref = db.relationship("Product", foreign_keys=[product_id])
     qty = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return "Product Movement" + str(self.movement_id)
+        return "Product Movement " + str(self.movement_id)
     
 # Home Page
 @app.route('/')
@@ -119,6 +123,7 @@ def product_movement():
 
     # Get the From Location, To Location and Product name
     for movement in movements:
+        print(movement.from_location)
         from_query = db.session.query(Location).filter(Location.location_id == movement.from_location)
         for row in from_query:
             movement.from_location = row.location_name

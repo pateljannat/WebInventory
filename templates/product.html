@@ -1,7 +1,9 @@
 {% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+
+{% if products %}
 <div class="m-3">
 	<h3 class="d-inline-block"> Products</h3>
-	<a href="/product/add" class="btn btn-success float-right d-inline-block ">+ Products</a>
+	<a href="/product/add" class="btn btn-success float-right d-inline-block ">+ Product</a>
 </div>
 <table class="table mt-4">
 	<thead class="thead-dark">
@@ -28,5 +30,11 @@
 		{% endfor%}
 	</tbody>
 </table>
+{% else %}
+<div class="m-3">
+	<h3 class="d-inline-block"> You have no products in you Inventory.</h3>
+	<a href="/product/add" class="btn btn-success float-right d-inline-block ">+ Product</a>
+</div>
+{% endif %}
 
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %} {% if movements %}
 <div class="m-3">
 	<h3 class="d-inline-block">Product Movements</h3>
 	<a href="/product-movement/add" class="btn btn-success float-right d-inline-block">Move Products</a>
@@ -43,5 +43,9 @@
 		{% endfor%}
 	</tbody>
 </table>
-
-{% endblock %}
+{% else %}
+<div class="m-3">
+	<h3 class="d-inline-block">You haven't moved any products yet.</h3>
+	<a href="/product-movement/add" class="btn btn-success float-right d-inline-block">Move Products</a>
+</div>
+{% endif %} {% endblock %}
