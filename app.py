@@ -32,7 +32,6 @@ class ProductMovement(db.Model):
     from_location = db.Column(db.Integer, db.ForeignKey('Location.location_id'))
     to_location = db.Column(db.Integer,db.ForeignKey('Location.location_id'))
     product_id = db.Column(db.Integer,db.ForeignKey('Product.product_id'))
-
     from_location_ref = db.relationship("Location",foreign_keys=[from_location])
     to_location_ref = db.relationship("Location",foreign_keys=[to_location])
     product_ref = db.relationship("Product", foreign_keys=[product_id])
@@ -123,7 +122,6 @@ def product_movement():
 
     # Get the From Location, To Location and Product name
     for movement in movements:
-        print(movement.from_location)
         from_query = db.session.query(Location).filter(Location.location_id == movement.from_location)
         for row in from_query:
             movement.from_location = row.location_name
