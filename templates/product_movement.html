@@ -24,10 +24,18 @@
 				{{movement.timestamp.day}}/{{movement.timestamp.month}}/{{movement.timestamp.year}} {{movement.timestamp.strftime("%X")}}
 			</td>
 			<td scope="row">
+				{% if movement.from_location %}
 				{{movement.from_location}}
+				{% else %}
+				N/A
+				{% endif %}
 			</td>
 			<td scope="row">
+				{% if movement.to_location %}
 				{{movement.to_location}}
+				{% else %}
+				N/A
+				{% endif %}
 			</td>
 			<td scope="row">
 				{{movement.product_id}}

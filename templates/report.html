@@ -10,19 +10,21 @@
 		</tr>
 	</thead>
 	<tbody>
-		{% for items in report %} {% for location in items %} {% for product in items[location] %}
+	 {% for location in report %} {% for product in report[location] %}
 		<tr scope="row">
 			<td>
 				{{location}}
 			</td>
+			
 			<td>
 				{{product}}
 			</td>
 			<td>
-				{{items[location][product]}}
+				{{report[location][product]}}
 			</td>
+			
 		</tr>
-		{% endfor %} {% endfor %} {% endfor%}
+		{% endfor %} {% endfor %}
 	</tbody>
 </table>
 {% else %}

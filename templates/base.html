@@ -45,6 +45,16 @@
 			</div>
 		</nav>
 		<div class="container">
+			{% with messages = get_flashed_messages(with_categories=true) %}
+				{% if messages %}
+					{% for category, message in messages %}
+					<div class="alert alert-danger m-3 flashes {{category}}" role="alert">
+						<button type="button" class="close" onclick="closeFlash()">&times;</button>
+						{{message}}
+					</div>
+					{% endfor %}
+				{% endif %}
+			{% endwith %}
 			{% block body %} {% endblock %}
 		</div>
 		<script
@@ -62,5 +72,10 @@
 			integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
 			crossorigin="anonymous"
 		></script>
+		<script>
+			function closeFlash(){
+				$('.flashes').hide()
+			}
+		</script>
 	</body>
 </html>

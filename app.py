@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
 
 app = Flask(__name__)
+app.secret_key = '_5#y2L"F4Q8z\n\xec]/'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
 db = SQLAlchemy(app)
 
@@ -119,28 +120,26 @@ def delete_location(id):
 @app.route('/product-movement')
 def product_movement():
     movements = ProductMovement.query.all()
-
     # Get the From Location, To Location and Product name
     for movement in movements:
-        from_query = db.session.query(Location).filter(Location.location_id == movement.from_location)
-        for row in from_query:
-            movement.from_location = row.location_name
-        to_query = db.session.query(Location).filter(Location.location_id == movement.to_location)
-        for row in to_query:
-            movement.to_location = row.location_name
-        product_query = db.session.query(Product).filter(Product.product_id == movement.product_id)
-        for row in product_query:
-            movement.product_id = row.product_name
+        movement.from_location = getLocationName(movement.from_location)
+        movement.to_location = getLocationName(movement.to_location)
+        movement.product_id = getProductName(movement.product_id)
     return render_template('product_movement.html', movements=movements)
 
 # Add Product Movements
 @app.route('/product-movement/add', methods=["GET", "POST"])
 def add_product_movement():
+    report = report_data()
     if request.method == "POST":
         from_location = request.form['from_location']
         to_location = request.form["to_location"]
         product_id = request.form["product_id"]
-        qty = request.form["qty"]
+        qty = int(request.form["qty"])
+        result = checkStock(from_location, product_id, qty)
+        if result != True:
+            displayMessage(result)
+            return redirect('/product-movement')
         db.session.add(ProductMovement(from_location=from_location, to_location=to_location, product_id=product_id, qty=qty ))
         db.session.commit()
         return redirect('/product-movement')
@@ -152,10 +151,18 @@ def add_product_movement():
 def edit_product_movement(id):
     movement = ProductMovement.query.get_or_404(id)
     if request.method == "POST":
-        movement.from_location = request.form['from_location']
-        movement.to_location = request.form["to_location"]
-        movement.product_id = request.form["product_id"]
-        movement.qty = request.form["qty"]
+        from_location = request.form['from_location']
+        to_location = request.form["to_location"]
+        product_id = request.form["product_id"]
+        qty = int(request.form["qty"])
+        result = checkStock(from_location, product_id, qty)
+        if result != True:
+            displayMessage(result)
+            return redirect('/product-movement')
+        movement.from_location = from_location
+        movement.to_location = to_location
+        movement.product_id = product_id
+        movement.qty = qty
         db.session.commit()
         return redirect("/product-movement")
     else:
@@ -169,66 +176,102 @@ def delete_product_movement(id):
     db.session.commit()
     return redirect('/product-movement')
 
-# Inventory Report
-@app.route('/report')
-def generate_report():
-    report = []
+# Generates report
+def report_data():
+    report = {}
     movements = ProductMovement.query.all()
     for movement in movements:
-        from_location = ''
-        to_location = ''
-        product_id = ''
-
         # Get the From Location, To Location and Product name
-        from_query = db.session.query(Location).filter(Location.location_id == movement.from_location)
-        for row in from_query:
-            from_location = row.location_name
-        to_query = db.session.query(Location).filter(Location.location_id == movement.to_location)
-        for row in to_query:
-            to_location = row.location_name
-        product_query = db.session.query(Product).filter(Product.product_id == movement.product_id)
-        for row in product_query:
-            product_id = row.product_name
-
+        movementProcessed = getMovementData(movement)
         # Check if From Location is present in the report and From Location has the product then reduce the mentioned quantity of that product 
-        if from_location:
-            fromLocationFoundInReport = False
-            for item in report:
-                if(from_location in item):
-                    fromLocationFoundInReport = True
-                    itemsInFromLocation = item[from_location]
-                    if(product_id in itemsInFromLocation):
-                        itemsInFromLocation[product_id] = itemsInFromLocation[product_id] - movement.qty
-                    else:
-                        itemsInFromLocation[product_id] = -movement.qty
-            if fromLocationFoundInReport == False:
-                report.append({
-                    from_location : {
-                        product_id : -movement.qty
-                    }
-                })
-
-
+        if movementProcessed["from_location"]:
+            computeReportForLocation(movementProcessed, report, "subtract")
         # Check if To Location is present in the report and To Location has the product then add the mentioned quantity to that product
-        if to_location:
-            toLocationFoundInReport = False
-            for item in report:
-                if(to_location in item):
-                    toLocationFoundInReport = True
-                    itemsInToLocation = item[to_location]
-                    if(product_id in itemsInToLocation):
-                        itemsInToLocation[product_id] = itemsInToLocation[product_id] + movement.qty
-                    else:
-                        itemsInToLocation[product_id] = movement.qty
-        # If To Location was not present in the report already add it to the report with that product and quantity                
-            if toLocationFoundInReport == False:
-                report.append({
-                    to_location : {
-                        product_id : movement.qty
-                    }
-                })     
+        if movementProcessed["to_location"]:
+            computeReportForLocation(movementProcessed, report, "add")
+    return report   
 
+# Display Inventory Report
+@app.route('/report')
+def generate_report():
+    report = report_data()
     return render_template("report.html", report=report)
+
+# Returns Location name
+def getLocationName(location_id):
+    location = Location.query.filter_by(location_id = location_id).first()
+    return location.location_name if location else location
+
+#Returns Product name
+def getProductName(product_id):
+    product = Product.query.filter_by(product_id = product_id).first()
+    return product.product_name if product else product
+
+# Returns movement information
+def getMovementData(movement):
+    movementData = {
+        "from_location" : getLocationName(movement.from_location),
+        "to_location": getLocationName(movement.to_location),
+        "product_id" : getProductName(movement.product_id),
+        "qty": movement.qty
+    }
+    return movementData
+
+# Performs quantity update if location is present in report
+def getLocationItems(location, movement, report, operation):
+    if location in report:
+        return calculateQuantity(report[location], movement, operation)
+    return
+
+def calculateQuantity(locationData, movement, operation):
+    if movement["product_id"] in locationData:
+            locationData[movement["product_id"]] = locationData[movement["product_id"]] - movement["qty"] if operation == "subtract" else locationData[movement["product_id"]] + movement["qty"]
+    else:
+        locationData[movement["product_id"]] =  - movement["qty"] if operation == "subtract" else movement["qty"]
+    return locationData
+
+# Adds location information to report if not already present
+def addLocationDataToReport(movement, report, operation):
+    if operation == "subtract":
+        report[movement["from_location"]] = {
+            movement["product_id"]: -movement["qty"]
+        }
+    else:
+        report[movement["to_location"]] = {
+            movement["product_id"]: movement["qty"]
+        }
+
+# Generates location information for report
+def computeReportForLocation(movement, report, operation):
+    location = movement["from_location"] if operation == "subtract" else movement["to_location"]
+    itemsInLocation = getLocationItems(location, movement, report, operation)
+    if not itemsInLocation:
+        addLocationDataToReport(movement, report, operation)
+
+# Checks if a product is present in a location and its quantity in that location
+def checkStock(location, product, qty):
+    report = report_data()
+    location = getLocationName(location)
+    product = getProductName(product)
+    if location in report:
+        locationData = report[location]
+        if product in locationData:
+            return True if locationData[product] >= qty else {"value": locationData[product], "product": product, "location": location}
+        else: 
+            return { "value" : False, "product": product, "location": location}
+    elif not location:
+        return True
+    else: 
+        return { "value" : False, "product": product, "location": location }
+
+# Displays flash messages
+def displayMessage(result):
+    if not result["value"]:
+        message = "Sorry " + result["product"] + " is not available in " + result["location"] 
+        flash(message, 'error')
+    else:
+        message = "Sorry only " + str(result["value"]) + " " + (result["product"]) + " is available in " + (result["location"]) 
+        flash(message, 'error')
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@
 				<label for="from_location">From:</label>
 				<div class="dropdown">
 					<select class="btn btn-secondary dropdown-toggle" id="from_location" name="from_location">
-						<option value="N/A">Select</option>
+						<option value="null">Select</option>
 						{% for location in locations %}
 						<option class="dropdown-item" value="{{location.location_id}}" {% if (movement) and (movement.from_location == location.location_id )%} selected="selected" {% endif %}>
 							{{location.location_name}}
@@ -21,7 +21,7 @@
 				<label for="to_location">To:</label>
 				<div class="dropdown">
 					<select class="btn btn-secondary dropdown-toggle" name="to_location" id="to_location">
-						<option value="N/A">Select</option>
+						<option value="null">Select</option>
 						{% for location in locations %}
 						<option class="dropdown-item" value="{{location.location_id}}" {% if (movement) and (movement.to_location == location.location_id) %} selected="selected" {% endif %}>
 							{{location.location_name}}
@@ -35,7 +35,7 @@
 				<label for="product_id">Product:</label>
 				<div class="dropdown">
 					<select required class="btn btn-secondary dropdown-toggle" name="product_id" id="product_id" >
-						<option value="">Select</option>
+						<option value="null">Select</option>
 						{% for product in products %}
 						<option class="dropdown-item" value="{{product.product_id}}" {% if (movement) and (movement.product_id == product.product_id) %} selected="selected" {% endif %}>
 							{{product.product_name}}
