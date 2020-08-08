@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, flash
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy 
 from datetime import datetime, timezone
 
 app = Flask(__name__)
@@ -130,7 +130,6 @@ def product_movement():
 # Add Product Movements
 @app.route('/product-movement/add', methods=["GET", "POST"])
 def add_product_movement():
-    report = report_data()
     if request.method == "POST":
         from_location = request.form['from_location']
         to_location = request.form["to_location"]
@@ -177,24 +176,31 @@ def delete_product_movement(id):
     return redirect('/product-movement')
 
 # Generates report
-def report_data():
+def report_data(location, product):
     report = {}
-    movements = ProductMovement.query.all()
+    if location:
+        movements = ProductMovement.query.filter((ProductMovement.from_location == location) | (ProductMovement.to_location == location ))
+    else:
+        movements = ProductMovement.query.all()
     for movement in movements:
         # Get the From Location, To Location and Product name
         movementProcessed = getMovementData(movement)
+        locationCheck = location and location != "null" 
+        productCheck = product and int(product) == movement.product_id
         # Check if From Location is present in the report and From Location has the product then reduce the mentioned quantity of that product 
-        if movementProcessed["from_location"]:
-            computeReportForLocation(movementProcessed, report, "subtract")
+        if ((locationCheck and int(location) == movement.from_location and productCheck) or not location):
+            if movementProcessed["from_location"]:
+                computeReportForLocation(movementProcessed, report, "subtract")
         # Check if To Location is present in the report and To Location has the product then add the mentioned quantity to that product
-        if movementProcessed["to_location"]:
-            computeReportForLocation(movementProcessed, report, "add")
+        if ((locationCheck  and int(location) == movement.to_location and productCheck) or not location):
+            if movementProcessed["to_location"]:
+                computeReportForLocation(movementProcessed, report, "add")
     return report   
 
 # Display Inventory Report
 @app.route('/report')
 def generate_report():
-    report = report_data()
+    report = report_data(False, False)
     return render_template("report.html", report=report)
 
 # Returns Location name
@@ -250,7 +256,7 @@ def computeReportForLocation(movement, report, operation):
 
 # Checks if a product is present in a location and its quantity in that location
 def checkStock(location, product, qty):
-    report = report_data()
+    report = report_data(location, product)
     location = getLocationName(location)
     product = getProductName(product)
     if location in report:
